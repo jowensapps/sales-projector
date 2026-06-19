@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>End-of-Month Sales Projection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Work+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --kraft: #E7DBBF;
+    --kraft-dark: #D8C8A2;
+    --ledger: #1F3A2E;
+    --ledger-light: #2C4F3D;
+    --burgundy: #A8333D;
+    --ink: #1C2B33;
+    --paper: #FBF8F1;
+    --brass: #B08D3D;
+    --display: 'Fraunces', serif;
+    --body: 'Work Sans', sans-serif;
+    --mono: 'Space Mono', monospace;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0;
+    min-height:100vh;
+    background: var(--ledger);
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(255,255,255,0.04), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(255,255,255,0.03), transparent 40%);
+    font-family: var(--body);
+    color: var(--ink);
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding: 48px 20px 80px;
+  }
+
+  .wrap{
+    width:100%;
+    max-width: 460px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .eyebrow{
+    color: rgba(251,248,241,0.65);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    text-align:center;
+  }
+
+  h1{
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: clamp(28px, 6vw, 38px);
+    color: var(--paper);
+    text-align:center;
+    margin: 0 0 28px;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+  }
+
+  /* ---------- Price tag (input) ---------- */
+  .tag{
+    position:relative;
+    width:100%;
+    background: var(--kraft);
+    border-radius: 14px;
+    padding: 30px 26px 26px;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+    transform: rotate(-1.1deg);
+    border: 1px solid rgba(0,0,0,0.08);
+  }
+
+  .punch{
+    position:absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 26px;
+    height: 26px;
+    background: var(--ledger);
+    border-radius: 50%;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 2px 0 rgba(255,255,255,0.05);
+  }
+  .punch::after{
+    content:"";
+    position:absolute;
+    inset: 7px;
+    background: var(--kraft);
+    border-radius: 50%;
+  }
+  .string{
+    position:absolute;
+    top: -34px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 22px;
+    background: repeating-linear-gradient(
+      to bottom, var(--brass) 0 4px, transparent 4px 7px
+    );
+  }
+
+  .tag-label{
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ledger);
+    opacity: 0.65;
+    display:block;
+    margin-bottom: 6px;
+  }
+
+  .field{
+    margin-bottom: 20px;
+  }
+  .field:last-child{ margin-bottom: 0; }
+
+  input[type="date"],
+  input[type="number"]{
+    width:100%;
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 22px;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1.5px solid rgba(31,58,46,0.25);
+    border-radius: 8px;
+    padding: 10px 12px;
+    outline: none;
+  }
+  input:focus{
+    border-color: var(--burgundy);
+    box-shadow: 0 0 0 3px rgba(168,51,61,0.15);
+  }
+
+  .sub-row{
+    display:flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ledger);
+    opacity: 0.7;
+  }
+
+  /* ---------- Perforation ---------- */
+  .perf{
+    width: 100%;
+    height: 18px;
+    margin-top: 4px;
+    background-image: radial-gradient(circle, var(--ledger) 4px, transparent 4.5px);
+    background-size: 18px 18px;
+    background-position: -3px center;
+    background-repeat: repeat-x;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ---------- Receipt (output) ---------- */
+  .receipt{
+    width: calc(100% - 16px);
+    background: var(--paper);
+    margin-top: -1px;
+    padding: 22px 24px 30px;
+    font-family: var(--mono);
+    color: var(--ink);
+    box-shadow: 0 14px 30px rgba(0,0,0,0.3);
+    clip-path: polygon(
+      0% 0%, 100% 0%, 100% 96%,
+      96% 100%, 92% 96%, 88% 100%, 84% 96%, 80% 100%,
+      76% 96%, 72% 100%, 68% 96%, 64% 100%, 60% 96%, 56% 100%,
+      52% 96%, 48% 100%, 44% 96%, 40% 100%, 36% 96%, 32% 100%,
+      28% 96%, 24% 100%, 20% 96%, 16% 100%, 12% 96%, 8% 100%, 4% 96%, 0% 100%
+    );
+  }
+
+  .receipt-title{
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    text-align:center;
+    margin-bottom: 14px;
+  }
+
+  .dash{
+    border: none;
+    border-top: 1px dashed rgba(28,43,51,0.35);
+    margin: 14px 0;
+  }
+
+  .line{
+    display:flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+  .line span:last-child{ font-weight:700; }
+
+  .headline{
+    text-align:center;
+    margin: 18px 0 6px;
+  }
+  .headline .label{
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.6;
+    display:block;
+    margin-bottom: 4px;
+  }
+  .headline .amount{
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 44px;
+    color: var(--burgundy);
+    line-height: 1;
+  }
+
+  .pace-bar{
+    width:100%;
+    height: 8px;
+    background: rgba(31,58,46,0.12);
+    border-radius: 4px;
+    margin: 16px 0 4px;
+    overflow:hidden;
+  }
+  .pace-fill{
+    height:100%;
+    background: var(--ledger);
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+  .pace-caption{
+    font-size: 11px;
+    text-align:center;
+    opacity: 0.65;
+    margin-top: 4px;
+  }
+
+  .stamp{
+    position:absolute;
+    bottom: 14px;
+    right: 18px;
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--brass);
+    border: 1.5px solid var(--brass);
+    border-radius: 4px;
+    padding: 3px 7px;
+    transform: rotate(-6deg);
+    opacity: 0.8;
+  }
+
+  footer{
+    margin-top: 28px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: rgba(251,248,241,0.45);
+    text-align:center;
+    max-width: 380px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .pace-fill{ transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="eyebrow">Month-to-date pace</div>
+  <h1>End-of-Month<br>Sales Projection</h1>
+
+  <div class="tag">
+    <div class="string"></div>
+    <div class="punch"></div>
+
+    <div class="field">
+      <label class="tag-label" for="asOfDate">As of</label>
+      <input type="date" id="asOfDate">
+      <div class="sub-row">
+        <span id="dayLabel">Day —</span>
+        <span id="monthLabel">— days this month</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="tag-label" for="salesInput">Sales so far this month ($)</label>
+      <input type="number" id="salesInput" inputmode="decimal" min="0" step="0.01" placeholder="0.00">
+    </div>
+  </div>
+
+  <div class="perf"></div>
+
+  <div class="receipt" style="position:relative;">
+    <div class="receipt-title">Projection Receipt</div>
+    <hr class="dash">
+
+    <div class="line"><span>Days elapsed</span><span id="rDaysElapsed">—</span></div>
+    <div class="line"><span>Days remaining</span><span id="rDaysRemaining">—</span></div>
+    <div class="line"><span>Daily pace so far</span><span id="rDailyPace">—</span></div>
+
+    <div class="headline">
+      <span class="label">Projected month-end total</span>
+      <span class="amount" id="rProjected">$0</span>
+    </div>
+
+    <div class="pace-bar"><div class="pace-fill" id="paceFill"></div></div>
+    <div class="pace-caption" id="paceCaption">— % of the month elapsed</div>
+
+    <hr class="dash">
+    <div class="line"><span>Projected remaining sales</span><span id="rRemainingSales">—</span></div>
+
+    <div class="stamp">Est.</div>
+  </div>
+
+  <footer>Projection = (sales so far ÷ days elapsed) × days in month.<br>A straight-line estimate — actual results will vary with day-of-week and seasonal swings.</footer>
+</div>
+
+<script>
+  const dateInput = document.getElementById('asOfDate');
+  const salesInput = document.getElementById('salesInput');
+
+  const dayLabel = document.getElementById('dayLabel');
+  const monthLabel = document.getElementById('monthLabel');
+
+  const rDaysElapsed = document.getElementById('rDaysElapsed');
+  const rDaysRemaining = document.getElementById('rDaysRemaining');
+  const rDailyPace = document.getElementById('rDailyPace');
+  const rProjected = document.getElementById('rProjected');
+  const rRemainingSales = document.getElementById('rRemainingSales');
+  const paceFill = document.getElementById('paceFill');
+  const paceCaption = document.getElementById('paceCaption');
+
+  function fmtMoney(n){
+    if(!isFinite(n)) n = 0;
+    return '$' + n.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  }
+
+  function daysInMonth(year, monthIndex){
+    return new Date(year, monthIndex + 1, 0).getDate();
+  }
+
+  function todayISO(){
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function recalc(){
+    const dateVal = dateInput.value ? new Date(dateInput.value + 'T00:00:00') : new Date();
+    const year = dateVal.getFullYear();
+    const monthIndex = dateVal.getMonth();
+    const dayOfMonth = dateVal.getDate();
+    const totalDays = daysInMonth(year, monthIndex);
+    const daysRemaining = Math.max(totalDays - dayOfMonth, 0);
+
+    dayLabel.textContent = `Day ${dayOfMonth}`;
+    monthLabel.textContent = `${totalDays} days this month`;
+
+    const sales = parseFloat(salesInput.value);
+    const validSales = isFinite(sales) && sales >= 0 ? sales : 0;
+
+    const dailyPace = dayOfMonth > 0 ? validSales / dayOfMonth : 0;
+    const projected = dailyPace * totalDays;
+    const remainingSales = projected - validSales;
+
+    rDaysElapsed.textContent = dayOfMonth;
+    rDaysRemaining.textContent = daysRemaining;
+    rDailyPace.textContent = fmtMoney(dailyPace) + ' / day';
+    rProjected.textContent = fmtMoney(projected);
+    rRemainingSales.textContent = fmtMoney(Math.max(remainingSales, 0));
+
+    const pct = totalDays > 0 ? Math.min((dayOfMonth / totalDays) * 100, 100) : 0;
+    paceFill.style.width = pct.toFixed(1) + '%';
+    paceCaption.textContent = pct.toFixed(0) + '% of the month elapsed';
+  }
+
+  dateInput.value = todayISO();
+  dateInput.addEventListener('input', recalc);
+  salesInput.addEventListener('input', recalc);
+
+  recalc();
+</script>
+
+</body>
+</html>
